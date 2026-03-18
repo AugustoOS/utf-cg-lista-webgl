@@ -27,7 +27,7 @@ https://seu-user.github.io/utf-cg-lista-webgl/. Não é incrível?
 <details>
   <summary>Ativando Github Pages para seu repositório</summary>
   
-  ![](https://raw.githubusercontent.com/fegemo/utf-cg/refs/heads/main/exercises/webgl-prim/images/square-annulus.png)
+  ![](https://raw.githubusercontent.com/fegemo/utf-cg/refs/heads/main/exercises/webgl-prim/images/github-pages-config.webp)
 </details>
 
 

@@ -11,6 +11,46 @@ if (!gl) {
     throw new Error('WebGL2 não suportado');
 }
 
+let n_vertex = 3;
+let vertices;
+let vbo = null;
+
+function update_poly() {
+    const vertexArray = [];
+    const angleStep = (360 / n_vertex) * Math.PI / 180;
+    const radius = 100;
+
+    for(let i = 0; i < n_vertex; i++) {
+        const angle = angleStep * i + Math.PI / 2;
+        const x = radius * Math.cos(angle);
+        const y = radius * Math.sin(angle);
+        vertexArray.push(x, y, 0);
+    }
+
+    vertices = new Float32Array(vertexArray);
+
+    if (vbo) {
+        gl.bindBuffer(gl.ARRAY_BUFFER, vbo);
+        gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.STATIC_DRAW);
+    }
+}
+
+document.addEventListener("keydown", (e) => {
+    if (e.code === "ArrowRight")
+    {
+        n_vertex++;
+        update_poly();
+    }  
+});
+
+document.addEventListener("keydown", (e) => {
+    if (e.code === "ArrowLeft" && n_vertex > 3)
+    {
+        n_vertex--;
+        update_poly();
+    }  
+});
+
 function translation(tx, ty, tz) {  //translação do object
     return new Float32Array([1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, tx, ty, tz, 1]);
 }
@@ -26,16 +66,6 @@ function ortho(l, r, b, t, n, f) {  //left, right, bottom, top, near, far
 
     return new Float32Array([mx, 0, 0, 0, 0, my, 0, 0, 0, 0, mz, 0, tx, ty, tz, 1]); // column order
 }
-
-let press = false;
-
-document.addEventListener("keydown", (e) => {
-  if (e.code === "KeyC") press = true;
-});
-
-document.addEventListener("keyup", (e) => {
-  if (e.code === "KeyC") press = false; 
-});
 
 async function main() {
 
@@ -66,38 +96,15 @@ async function main() {
 
     gl.useProgram(program);
 
-    const vertices = new Float32Array([ // esse zigue zague vai guiar o triangles strip para desenhar o quadrado
-        -200, 200, 0,  // v1
-        -100, 100, 0,  // v2
-        -200, -200, 0,  // v3
-        -100, -100, 0,  // v4
-        200, -200, 0,  // v5
-        100, -100, 0,  // v6
-        200, 200, 0,   // v7
-        100, 100, 0,   // v8
-        -200, 200, 0,  // v9
-        -100, 100, 0  // v10
-    ]);
-
-    const index1 = new Uint16Array([0, 2, 4, 6]);   // para fazer os contornos dos quadrados com IBO's, o primeiro é para o quadrado maior
-    const index2 = new Uint16Array([3, 5, 7, 9]);
-
     const proj_matrix = ortho(-250, 250, -250, 250, -1, 1); // canvas 500x500x2
 
     const vao = gl.createVertexArray();
     gl.bindVertexArray(vao);
 
-    const vbo = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, vbo);
+    vbo = gl.createBuffer();
+    
+    update_poly();
     gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.STATIC_DRAW);
-
-    const ibo1 = gl.createBuffer();
-    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, ibo1);
-    gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, index1, gl.STATIC_DRAW);
-
-    const ibo2 = gl.createBuffer();
-    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, ibo2);
-    gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, index2, gl.STATIC_DRAW);
 
     const colorUniformLoc = gl.getUniformLocation(program, 'color');
     const positionAttributeLocation = gl.getAttribLocation(program, 'position');
@@ -113,21 +120,10 @@ async function main() {
         gl.bindBuffer(gl.ARRAY_BUFFER, vbo);
         gl.vertexAttribPointer(positionAttributeLocation, 3, gl.FLOAT, false, 0, 0);
         gl.enableVertexAttribArray(positionAttributeLocation);
-        gl.uniform3fv(colorUniformLoc, [0.61, 0.83, 0.83]);
-        gl.drawArrays(gl.TRIANGLE_STRIP, 0, 10);
-
         gl.uniform3fv(colorUniformLoc, [0, 0, 0]);
-
-        gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, ibo1);
-        gl.drawElements(gl.LINE_LOOP, index1.length, gl.UNSIGNED_SHORT, 0);
-
-        gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, ibo2);
-        gl.drawElements(gl.LINE_LOOP, index2.length, gl.UNSIGNED_SHORT, 0);
-
-        if (press) {
-            gl.uniform3fv(colorUniformLoc, [0, 0, 0]);
-            gl.drawArrays(gl.LINE_STRIP, 0, 10);
-        }
+        gl.drawArrays(gl.LINE_LOOP, 0, n_vertex);
+        gl.uniform3fv(colorUniformLoc, [1, 0.1, 0.1]);
+        gl.drawArrays(gl.TRIANGLE_FAN, 0, n_vertex);
 
         requestAnimationFrame(render);
     }

@@ -15,7 +15,6 @@ function translation(tx, ty, tz) {//translação do object
   return new Float32Array([1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, tx, ty, tz, 1]);
 }
 
-
 function ortho(l, r, b, t, n, f) {  //left, right, bottom, top, near, far
 
   const mx = 2 / (r - l);
